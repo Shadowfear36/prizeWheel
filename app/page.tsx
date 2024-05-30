@@ -25,7 +25,9 @@ export default function Home() {
   };
 
   const handleSpinComplete = (result: string) => {
-    setResult(result);
+    setTimeout(() => {
+      setResult(result);
+    }, 700);
   };
 
   const closePopup = () => {
