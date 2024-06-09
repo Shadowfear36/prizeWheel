@@ -1,89 +1,97 @@
 'use client'
-import React, { useState } from 'react';
-import WheelSpinner from "./components/wheel";
+import React, { useState, useEffect } from 'react';
+import WheelComponent from "./components/wheelcomponent";
+import HamburgerMenu from "./components/hamburgermenu";
 
-export default function Home() {
-  const initialWordList = ["Hello", "Now", "World"];
-  const [wordList, setWordList] = useState(initialWordList);
-  const [currentWord, setCurrentWord] = useState("");
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
+const Home: React.FC = () => {
+  const [segments, setSegments] = useState([
+    { name: "PB", color: "#cd4548" }, { name: "MM", color: "#1691d4" },
+    { name: "L", color: "#62b48c" }, { name: "K", color: "#ffa20f" },
+    { name: "AoN", color: "#7b6bb7" }, { name: "P3", color: "#909a8c" },
+    { name: "P4", color: "#7a1f1f" }, { name: "EJ", color: "#d1a365" },
+    { name: "EM", color: "#114a96" }
+  ]);
+  const [centerImage, setCenterImage] = useState<string | null>(null);
+  const [borderColor, setBorderColor] = useState("white");
+  const [primaryColor, setPrimaryColor] = useState("black");
+  const [contrastColor, setContrastColor] = useState("white");
+  const [winner, setWinner] = useState<string | null>(null);
+  const [isHamburgerMenuOpen, setIsHamburgerMenuOpen] = useState(false);
+  const [wheelSize, setWheelSize] = useState(300);
 
-  const addWord = () => {
-    if (currentWord && !wordList.includes(currentWord)) {
-      setWordList([...wordList, currentWord]);
-      setCurrentWord("");
+  const handleAddSegment = (segment: { name: string, color: string }) => {
+    setSegments([...segments, segment]);
+  };
+
+  const handleRemoveSegment = (index: number) => {
+    const newSegments = segments.filter((_, i) => i !== index);
+    setSegments(newSegments);
+  };
+
+  const handleImageUpload = (image: string | ArrayBuffer | null) => {
+    if (typeof image === 'string') {
+      setCenterImage(image);
     }
   };
 
-  const removeWord = (word: string) => {
-    setWordList(wordList.filter(item => item !== word));
+  const handleWheelColors = (primary: string, contrast: string, border: string) => {
+    setPrimaryColor(primary);
+    setContrastColor(contrast);
+    setBorderColor(border);
   };
 
-  const handleFormToggle = () => {
-    setIsFormOpen(!isFormOpen);
+  const onFinished = (winner: string) => {
+    // setWinner(winner);
+    console.log(winner)
   };
 
-  const handleSpinComplete = (result: string) => {
-    setTimeout(() => {
-      setResult(result);
-    }, 700);
-  };
+  useEffect(() => {
+    const updateWheelSize = () => {
+      if (window.innerWidth <= 768) { // Mobile screen size
+        setWheelSize(150);
+      } else {
+        setWheelSize(300);
+      }
+    };
 
-  const closePopup = () => {
-    setResult(null);
-  };
+    updateWheelSize();
+    window.addEventListener('resize', updateWheelSize);
+
+    return () => {
+      window.removeEventListener('resize', updateWheelSize);
+    };
+  }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24 ">
-      <div className="fixed top-14 right-14 text-black">
-        <button onClick={handleFormToggle} className="bg-blue-500 text-white px-4 py-2 rounded">
-          {isFormOpen ? "Close" : "Open"} Form
-        </button>
-      </div>
-
-      {isFormOpen && (
-        <div className="fixed top-24 right-14 bg-white p-4 rounded shadow-lg text-black">
-          <h3 className="text-xl mb-2">Manage Words</h3>
-          <input
-            type="text"
-            value={currentWord}
-            onChange={(e) => setCurrentWord(e.target.value)}
-            className="border p-2 mb-2 w-full"
-            placeholder="Enter a word"
-          />
-          <button onClick={addWord} className="bg-green-500 text-white px-4 py-2 rounded mb-2">
-            Add Word
-          </button>
-          <ul>
-            {wordList.map((word, index) => (
-              <li key={index} className="flex justify-between items-center mb-1">
-                {word}
-                <button
-                  onClick={() => removeWord(word)}
-                  className="bg-red-500 text-white px-2 py-1 rounded"
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+      <button onClick={() => setIsHamburgerMenuOpen(!isHamburgerMenuOpen)} className="hamburger-button">
+        ☰
+      </button>
+      {isHamburgerMenuOpen && (
+        <HamburgerMenu
+          onAddSegment={handleAddSegment}
+          onRemoveSegment={handleRemoveSegment}
+          onImageUpload={handleImageUpload}
+          onWheelColors={handleWheelColors}
+          segments={segments}
+        />
       )}
-
-      {result && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 text-black">
-          <div className="bg-white p-4 rounded shadow-lg">
-            <h3 className="text-xl mb-2">Result</h3>
-            <p className="text-2xl">{result}</p>
-            <button onClick={closePopup} className="bg-blue-500 text-white px-4 py-2 rounded mt-2">
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      <WheelSpinner items={wordList} onComplete={handleSpinComplete} />
+      <WheelComponent
+        segments={segments.map(s => s.name)}
+        segColors={segments.map(s => s.color)}
+        centerImage={centerImage}
+        onFinished={onFinished}
+        primaryColor={primaryColor}
+        contrastColor={contrastColor}
+        borderColor={borderColor}
+        size={wheelSize} // Use the responsive wheel size
+        upDuration={500}
+        downDuration={600}
+        fontFamily="Helvetica"
+        isOnlyOnce={false}
+      />
     </main>
   );
-}
+};
+
+export default Home;
