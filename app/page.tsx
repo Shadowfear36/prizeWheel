@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import WheelComponent from "./components/wheelcomponent";
 import HamburgerMenu from "./components/hamburgermenu";
-
+import Logo from './components/images/logo.png'
 const Home: React.FC = () => {
   const [segments, setSegments] = useState([
     { name: "PB", color: "#003087" }, { name: "MM", color: "#4DA4F2" },
@@ -55,7 +55,7 @@ const Home: React.FC = () => {
 
     updateWheelSize();
     window.addEventListener('resize', updateWheelSize);
-
+    setCenterImage(Logo.src)
     return () => {
       window.removeEventListener('resize', updateWheelSize);
     };
