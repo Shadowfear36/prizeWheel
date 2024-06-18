@@ -14,20 +14,24 @@ interface HamburgerMenuProps {
   segments: Segment[];
 }
 
+const defaultSegmentColors = ['#003087', '#4DA4F2']; // Two shades of blue
+
 const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onAddSegment, onRemoveSegment, onImageUpload, onWheelColors, segments }) => {
   const [newSegment, setNewSegment] = useState<Segment>({ name: '', color: '#000000' });
   const [primaryColor, setPrimaryColor] = useState('#000000');
   const [contrastColor, setContrastColor] = useState('#FFFFFF');
   const [borderColor, setBorderColor] = useState('#000000');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [allowCustomizations, setAllowCustomizations] = useState(false);
 
   const handleAddSegment = () => {
-    onAddSegment(newSegment);
+    const segmentToAdd = allowCustomizations ? newSegment : { ...newSegment, color: defaultSegmentColors[segments.length % defaultSegmentColors.length] };
+    onAddSegment(segmentToAdd);
     setNewSegment({ name: '', color: '#000000' });
   };
 
-  const onDrop = useCallback((acceptedFiles : any) => {
-    acceptedFiles.forEach((file : any) => {
+  const onDrop = useCallback((acceptedFiles: any) => {
+    acceptedFiles.forEach((file: any) => {
       const reader = new FileReader();
       reader.onabort = () => console.log('file reading was aborted');
       reader.onerror = () => console.log('file reading has failed');
@@ -61,8 +65,18 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onAddSegment, onRemoveSeg
             value={newSegment.color}
             className="border-solid border-2 border-gray-300 rounded-md mb-1 mr-1"
             onChange={(e) => setNewSegment({ ...newSegment, color: e.target.value })}
+            disabled={!allowCustomizations}
           />
           <button className="p-1 bg-green-500 rounded-md text-white text-xs w-full" onClick={handleAddSegment}>Add</button>
+        </div>
+        <div className="flex items-center mb-2">
+          <input
+            type="checkbox"
+            checked={allowCustomizations}
+            onChange={(e) => setAllowCustomizations(e.target.checked)}
+            className="mr-2"
+          />
+          <label>Allow Customizations</label>
         </div>
         <ul className="flex flex-col w-full mb-2">
           {segments.map((segment, index) => (

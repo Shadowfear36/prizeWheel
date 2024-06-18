@@ -47,7 +47,6 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
   const [canvasId, setCanvasId] = useState('');
   const [wheelId, setWheelId] = useState('');
   const dimension = (size + 20) * 2;
-  const canvasWidth = dimension + 300;
   const canvasHeight = dimension + 70; // Increase height to accommodate the text at the bottom
   const [currentSegment, setCurrentSegment] = useState<string>('');
   const [isStarted, setIsStarted] = useState(false);
@@ -119,7 +118,7 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
 
     if (navigator.userAgent.indexOf('MSIE') !== -1) {
       canvas = document.createElement('canvas');
-      canvas.setAttribute('width', `${canvasWidth}`);
+      canvas.setAttribute('width', `${dimension}`);
       canvas.setAttribute('height', `${canvasHeight}`);
       canvas.setAttribute('id', canvasId);
       document.getElementById(wheelId)?.appendChild(canvas);

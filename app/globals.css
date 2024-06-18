@@ -32,6 +32,12 @@ body {
   }
 }
 
+body {
+  max-height: 100%;
+  max-width: 100%;
+  overflow-y: hidden;
+}
+
 
 .hamburger-button {
   position: fixed;

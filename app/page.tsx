@@ -5,15 +5,15 @@ import HamburgerMenu from "./components/hamburgermenu";
 
 const Home: React.FC = () => {
   const [segments, setSegments] = useState([
-    { name: "PB", color: "#cd4548" }, { name: "MM", color: "#1691d4" },
-    { name: "L", color: "#62b48c" }, { name: "K", color: "#ffa20f" },
-    { name: "AoN", color: "#7b6bb7" }, { name: "P3", color: "#909a8c" },
-    { name: "P4", color: "#7a1f1f" }, { name: "EJ", color: "#d1a365" },
-    { name: "EM", color: "#114a96" }
+    { name: "PB", color: "#003087" }, { name: "MM", color: "#4DA4F2" },
+    { name: "L", color: "#003087" }, { name: "K", color: "#4DA4F2" },
+    { name: "AoN", color: "#003087" }, { name: "P3", color: "#4DA4F2" },
+    { name: "P4", color: "#003087" }, { name: "EJ", color: "#4DA4F2" },
+    { name: "EM", color: "#003087" }, { name: "EK", color: "#4DA4F2" }
   ]);
   const [centerImage, setCenterImage] = useState<string | null>(null);
   const [borderColor, setBorderColor] = useState("white");
-  const [primaryColor, setPrimaryColor] = useState("black");
+  const [primaryColor, setPrimaryColor] = useState("white");
   const [contrastColor, setContrastColor] = useState("white");
   const [winner, setWinner] = useState<string | null>(null);
   const [isHamburgerMenuOpen, setIsHamburgerMenuOpen] = useState(false);
@@ -41,7 +41,6 @@ const Home: React.FC = () => {
   };
 
   const onFinished = (winner: string) => {
-    // setWinner(winner);
     console.log(winner)
   };
 
@@ -63,7 +62,7 @@ const Home: React.FC = () => {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+    <main className="flex min-h-screen flex-col items-center justify-center p-15">
       <button onClick={() => setIsHamburgerMenuOpen(!isHamburgerMenuOpen)} className="hamburger-button">
         ☰
       </button>
