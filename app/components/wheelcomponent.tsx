@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Logo from './images/logo.png';
+import spinSound from './audio/spinWheelAudio.m4a'; // Adjust the path as needed
+import winSound from './audio/spinWinAudio.m4a'; // Adjust the path as needed
+import pumpUpSound from './audio/Score.mp3'; // Adjust the path as needed
 
 export interface WheelComponentProps {
   segments: string[];
@@ -10,8 +13,6 @@ export interface WheelComponentProps {
   contrastColor?: string;
   borderColor?: string;
   size?: number;
-  upDuration?: number;
-  downDuration?: number;
   fontFamily?: string;
   fontSize?: string;
   outlineWidth?: number;
@@ -27,8 +28,6 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
   contrastColor,
   borderColor,
   size = 300,
-  upDuration = 100,
-  downDuration = 1000,
   fontFamily = 'proxima-nova',
   fontSize = '1em',
   outlineWidth = 10,
@@ -65,14 +64,15 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
   let angleDelta = 0;
   let canvasContext: CanvasRenderingContext2D | null = null;
   let maxSpeed = Math.PI / segments.length;
-  const upTime = segments.length * upDuration;
-  const downTime = segments.length * downDuration;
   let spinStart = 0;
   let frames = 0;
   const centerX = size + 20;
   const centerY = size + 20;
 
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const spinAudioRef = useRef<HTMLAudioElement>(null); // Add ref for spin audio
+  const winAudioRef = useRef<HTMLAudioElement>(null); // Add ref for win audio
+  const pumpUpAudioRef = useRef<HTMLAudioElement>(null); // Add ref for pump-up audio
 
   useEffect(() => {
     setCanvasId(`canvas-${randomString()}`);
@@ -139,44 +139,71 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
       spinStart = new Date().getTime();
       maxSpeed = Math.PI / segmentsRef.current.length;
       frames = 0;
-      timerHandle = window.setInterval(onTimerTick, timerDelay);
+      const audioDuration = spinAudioRef.current?.duration || 0;
+      const totalDuration = audioDuration * 1000; // Convert to milliseconds
+      const upTime = totalDuration / 3; // 1/3 of the time for spin up
+      const downTime = (totalDuration * 2) / 3; // 2/3 of the time for spin down
+
+      spinAudioRef.current?.play();
+      pumpUpAudioRef.current?.play();
+
+      timerHandle = window.setInterval(() => onTimerTick(upTime, downTime), timerDelay);
     }
   };
 
-  const onTimerTick = () => {
+  const onTimerTick = (upTime: number, downTime: number) => {
     frames++;
     draw();
     const duration = new Date().getTime() - spinStart;
     let progress = 0;
     let finished = false;
+
     if (duration < upTime) {
       progress = duration / upTime;
       angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2);
     } else {
-      if (currentSegment) {
-        if (frames > segmentsRef.current.length) {
-          progress = duration / upTime;
-          angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
-          progress = 1;
-        } else {
-          progress = duration / downTime;
-          angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
-        }
-      } else {
-        progress = duration / downTime;
-        angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
-      }
+      progress = (duration - upTime) / downTime;
+      angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
       if (progress >= 1) finished = true;
     }
 
     angleCurrent += angleDelta;
     while (angleCurrent >= Math.PI * 2) angleCurrent -= Math.PI * 2;
+
     if (finished) {
       setFinished(true);
       onFinished(currentSegment);
       clearInterval(timerHandle);
       timerHandle = 0;
       angleDelta = 0;
+      if (spinAudioRef.current) { // Stop spin audio when the wheel finishes spinning
+        spinAudioRef.current.pause();
+        spinAudioRef.current.currentTime = 0;
+      }
+      if (winAudioRef.current) { // Play win audio when the wheel finishes spinning
+        winAudioRef.current.play();
+      }
+
+      // Fade out pump-up music after 5-6 seconds
+      setTimeout(() => {
+        if (pumpUpAudioRef.current) {
+          const fadeOutDuration = 5000; // 5 seconds fade-out
+          const intervalTime = 50;
+          const fadeOutStep = intervalTime / fadeOutDuration;
+          let volume = 1;
+          const fadeOutInterval = setInterval(() => {
+            if (volume > 0) {
+              volume -= fadeOutStep;
+              pumpUpAudioRef.current.volume = Math.max(volume, 0);
+            } else {
+              clearInterval(fadeOutInterval);
+              pumpUpAudioRef.current.pause();
+              pumpUpAudioRef.current.currentTime = 0;
+              pumpUpAudioRef.current.volume = 1; // Reset volume for next play
+            }
+          }, intervalTime);
+        }
+      }, 5000); // Start fading out 5 seconds after the wheel stops
     }
   };
 
@@ -214,7 +241,7 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
     ctx.rotate((lastAngle + angle) / 2);
     ctx.fillStyle = primaryColorRef.current || "black";
     ctx.font = `bold ${fontSize} ${fontFamily}`;
-    ctx.fillText(value.substring(0, 21), size / 2 + 20, 0);
+    ctx.fillText(value.substring(0, 21), size / 2 + 25, 0);
     ctx.restore();
   };
 
@@ -226,7 +253,7 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
     let lastAngle = angleCurrent;
     const len = segmentsRef.current.length;
     const PI2 = Math.PI * 2;
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 10;
     ctx.strokeStyle = borderColorRef.current || "black";
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
@@ -328,6 +355,9 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
         onClick={spin}
         style={{ pointerEvents: isFinished && isOnlyOnce ? 'none' : 'auto', cursor: 'pointer' }}
       />
+      <audio ref={spinAudioRef} src={spinSound} />
+      <audio ref={winAudioRef} src={winSound} />
+      <audio ref={pumpUpAudioRef} src={pumpUpSound} />
     </div>
   );
 };

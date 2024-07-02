@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import WheelComponent from "./components/wheelcomponent";
 import HamburgerMenu from "./components/hamburgermenu";
-import Logo from './components/images/logo.png'
+import Logo from './components/images/logo.png';
+
 const Home: React.FC = () => {
   const [segments, setSegments] = useState([
     { name: "PB", color: "#003087" }, { name: "MM", color: "#4DA4F2" },
@@ -28,6 +29,16 @@ const Home: React.FC = () => {
     setSegments(newSegments);
   };
 
+  const handleUpdateSegment = (index: number, updatedSegment: { name: string, color: string }) => {
+    const updatedSegments = [...segments];
+    updatedSegments[index] = updatedSegment;
+    setSegments(updatedSegments);
+  };
+
+  const handleSetSegments = (newSegments: { name: string, color: string }[]) => {
+    setSegments(newSegments);
+  };
+
   const handleImageUpload = (image: string | ArrayBuffer | null) => {
     if (typeof image === 'string') {
       setCenterImage(image);
@@ -41,7 +52,7 @@ const Home: React.FC = () => {
   };
 
   const onFinished = (winner: string) => {
-    console.log(winner)
+    console.log(winner);
   };
 
   useEffect(() => {
@@ -55,7 +66,7 @@ const Home: React.FC = () => {
 
     updateWheelSize();
     window.addEventListener('resize', updateWheelSize);
-    setCenterImage(Logo.src)
+    setCenterImage(Logo.src);
     return () => {
       window.removeEventListener('resize', updateWheelSize);
     };
@@ -72,6 +83,8 @@ const Home: React.FC = () => {
           onRemoveSegment={handleRemoveSegment}
           onImageUpload={handleImageUpload}
           onWheelColors={handleWheelColors}
+          onUpdateSegment={handleUpdateSegment}
+          onSetSegments={handleSetSegments}
           segments={segments}
         />
       )}
