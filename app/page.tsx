@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import WheelComponent from "./components/wheelcomponent";
 import HamburgerMenu from "./components/hamburgermenu";
+import Confetti from 'react-confetti';
 import Logo from './components/images/logo.png';
 
 const Home: React.FC = () => {
@@ -19,6 +20,7 @@ const Home: React.FC = () => {
   const [winner, setWinner] = useState<string | null>(null);
   const [isHamburgerMenuOpen, setIsHamburgerMenuOpen] = useState(false);
   const [wheelSize, setWheelSize] = useState(300);
+  const [confettiActive, setConfettiActive] = useState(false);
 
   const handleAddSegment = (segment: { name: string, color: string }) => {
     setSegments([...segments, segment]);
@@ -53,6 +55,9 @@ const Home: React.FC = () => {
 
   const onFinished = (winner: string) => {
     console.log(winner);
+    setWinner(winner);
+    setConfettiActive(true);
+    setTimeout(() => setConfettiActive(false), 5000); // Confetti lasts for 5 seconds
   };
 
   useEffect(() => {
@@ -88,6 +93,7 @@ const Home: React.FC = () => {
           segments={segments}
         />
       )}
+      {confettiActive && <Confetti />}
       <WheelComponent
         segments={segments.map(s => s.name)}
         segColors={segments.map(s => s.color)}
