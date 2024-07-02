@@ -20,7 +20,7 @@ const Home: React.FC = () => {
   const [winner, setWinner] = useState<string | null>(null);
   const [isHamburgerMenuOpen, setIsHamburgerMenuOpen] = useState(false);
   const [wheelSize, setWheelSize] = useState(300);
-  const [confettiActive, setConfettiActive] = useState(false);
+  const [confettiPieces, setConfettiPieces] = useState(0);
 
   const handleAddSegment = (segment: { name: string, color: string }) => {
     setSegments([...segments, segment]);
@@ -56,8 +56,11 @@ const Home: React.FC = () => {
   const onFinished = (winner: string) => {
     console.log(winner);
     setWinner(winner);
-    setConfettiActive(true);
-    setTimeout(() => setConfettiActive(false), 5000); // Confetti lasts for 5 seconds
+    setConfettiPieces(200); // Start with 200 pieces of confetti
+
+    setTimeout(() => {
+      setConfettiPieces(0); // Stop generating new confetti pieces after a certain time
+    }, 7600); // Adjust the time as needed
   };
 
   useEffect(() => {
@@ -93,7 +96,11 @@ const Home: React.FC = () => {
           segments={segments}
         />
       )}
-      {confettiActive && <Confetti />}
+      {confettiPieces > 0 && (
+        <Confetti
+          numberOfPieces={confettiPieces}
+        />
+      )}
       <WheelComponent
         segments={segments.map(s => s.name)}
         segColors={segments.map(s => s.color)}

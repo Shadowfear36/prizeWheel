@@ -30,8 +30,6 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
   contrastColor,
   borderColor,
   size = 300,
-  upDuration = 500, // Set default value
-  downDuration = 600, // Set default value
   fontFamily = 'proxima-nova',
   fontSize = '1em',
   outlineWidth = 10,
