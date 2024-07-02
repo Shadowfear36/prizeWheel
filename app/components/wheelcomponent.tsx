@@ -13,6 +13,8 @@ export interface WheelComponentProps {
   contrastColor?: string;
   borderColor?: string;
   size?: number;
+  upDuration?: number; // Add upDuration
+  downDuration?: number; // Add downDuration
   fontFamily?: string;
   fontSize?: string;
   outlineWidth?: number;
@@ -28,6 +30,8 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
   contrastColor,
   borderColor,
   size = 300,
+  upDuration = 500, // Set default value
+  downDuration = 600, // Set default value
   fontFamily = 'proxima-nova',
   fontSize = '1em',
   outlineWidth = 10,
@@ -192,14 +196,16 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
           const fadeOutStep = intervalTime / fadeOutDuration;
           let volume = 1;
           const fadeOutInterval = setInterval(() => {
-            if (volume > 0) {
+            if (volume > 0 && pumpUpAudioRef.current) {
               volume -= fadeOutStep;
               pumpUpAudioRef.current.volume = Math.max(volume, 0);
             } else {
               clearInterval(fadeOutInterval);
-              pumpUpAudioRef.current.pause();
-              pumpUpAudioRef.current.currentTime = 0;
-              pumpUpAudioRef.current.volume = 1; // Reset volume for next play
+              if (pumpUpAudioRef.current) {
+                pumpUpAudioRef.current.pause();
+                pumpUpAudioRef.current.currentTime = 0;
+                pumpUpAudioRef.current.volume = 1; // Reset volume for next play
+              }
             }
           }, intervalTime);
         }
