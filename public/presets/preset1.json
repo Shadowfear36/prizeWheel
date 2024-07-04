@@ -1,42 +1,22 @@
 [
   {
-    "name": "PB",
+    "name": "$100 Flex Play",
     "color": "#003087"
   },
   {
-    "name": "MM",
+    "name": "$200 Flex Play",
     "color": "#4DA4F2"
   },
   {
-    "name": "L",
+    "name": "$250 Flex Play",
     "color": "#003087"
   },
   {
-    "name": "K",
+    "name": "$500 Flex Play",
     "color": "#4DA4F2"
   },
   {
-    "name": "AoN",
+    "name": "$1000 Flex Play",
     "color": "#003087"
-  },
-  {
-    "name": "P3",
-    "color": "#4DA4F2"
-  },
-  {
-    "name": "P4",
-    "color": "#003087"
-  },
-  {
-    "name": "EJ",
-    "color": "#4DA4F2"
-  },
-  {
-    "name": "EM",
-    "color": "#003087"
-  },
-  {
-    "name": "EK",
-    "color": "#4DA4F2"
   }
 ]

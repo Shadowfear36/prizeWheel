@@ -1,6 +1,5 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Dropzone from 'react-dropzone';
-import axios from 'axios';
 
 interface Segment {
   name: string;
@@ -13,8 +12,11 @@ interface HamburgerMenuProps {
   onImageUpload: (image: string | ArrayBuffer | null) => void;
   onWheelColors: (primary: string, contrast: string, border: string) => void;
   onUpdateSegment: (index: number, updatedSegment: Segment) => void;
-  onSetSegments: (segments: Segment[]) => void; // New function to set all segments
+  onSetSegments: (segments: Segment[]) => void;
   segments: Segment[];
+  pumpUpAudioRef: React.RefObject<HTMLAudioElement>; // Add this prop
+  isMuted: boolean; // Add isMuted prop
+  toggleMute: () => void; // Add toggleMute prop
 }
 
 const defaultSegmentColors = ['#003087', '#4DA4F2']; // Two shades of blue
@@ -26,7 +28,10 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   onWheelColors,
   onUpdateSegment,
   onSetSegments,
-  segments
+  segments,
+  pumpUpAudioRef, // Receive the audio ref
+  isMuted, // Receive the mute state
+  toggleMute // Receive the toggleMute function
 }) => {
   const [newSegment, setNewSegment] = useState<Segment>({ name: '', color: '#000000' });
   const [primaryColor, setPrimaryColor] = useState('#000000');
@@ -35,7 +40,19 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [allowCustomizations, setAllowCustomizations] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [presetToSave, setPresetToSave] = useState('preset1'); // For saving presets
+  const [presetToSave, setPresetToSave] = useState('preset1');
+  const [presets, setPresets] = useState<{ [key: string]: Segment[] }>({});
+
+  useEffect(() => {
+    // Fetch presets
+    fetch('/api/presets')
+      .then((response) => response.json())
+      .then((data) => setPresets(data.reduce((acc: any, preset: any) => {
+        acc[preset.name] = preset.segments;
+        return acc;
+      }, {})))
+      .catch((error) => console.error('Error fetching presets:', error));
+  }, []);
 
   const handleAddSegment = () => {
     const segmentToAdd = allowCustomizations
@@ -50,22 +67,36 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     setEditingIndex(null);
   };
 
-  const applyPreset = async (preset: string) => {
-    try {
-      const response = await axios.get(`/api/presets/${preset}`);
-      onSetSegments(response.data);
-    } catch (error) {
-      console.error('Error loading preset:', error);
-    }
+  const applyPreset = (presetName: string) => {
+    fetch(`/api/presets/${presetName}`)
+      .then((response) => response.json())
+      .then((preset) => {
+        if (preset) {
+          onSetSegments(preset);
+        }
+      })
+      .catch((error) => console.error('Error fetching preset:', error));
   };
 
-  const savePreset = async () => {
-    try {
-      await axios.post(`/api/presets/${presetToSave}`, segments);
-      alert('Preset saved');
-    } catch (error) {
-      console.error('Error saving preset:', error);
-    }
+  const savePreset = () => {
+    const updatedPreset = segments;
+    fetch(`/api/presets/${presetToSave}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedPreset),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data.message);
+        // Update local presets state
+        setPresets((prevPresets) => ({
+          ...prevPresets,
+          [presetToSave]: updatedPreset,
+        }));
+      })
+      .catch((error) => console.error('Error saving preset:', error));
   };
 
   const onDrop = useCallback((acceptedFiles: any) => {
@@ -90,7 +121,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     <div className="hamburger-menu w-full max-w-xs mx-auto p-2 bg-white rounded-lg shadow-lg">
       <div className="menu flex flex-col">
         <h2 className="font-bold text-lg mb-2">Wheel Settings</h2>
-        <div className="flex flex-row justify-center items-center mb-2">
+        <div className="flex flex-col justify-center items-center mb-2">
           <input
             type="text"
             placeholder="Segment Name"
@@ -105,10 +136,10 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             onChange={(e) => setNewSegment({ ...newSegment, color: e.target.value })}
             disabled={!allowCustomizations}
           />
-        </div>
           <button className="p-1 bg-green-500 rounded-md text-white text-xs w-full" onClick={handleAddSegment}>
             Add
           </button>
+        </div>
         <div className="flex items-center mb-2">
           <input
             type="checkbox"
@@ -213,13 +244,22 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
         </div>
         <h3 className="font-bold text-md mb-1">Save Preset</h3>
         <div className="flex flex-row items-center mb-2">
-          <select className="p-1 bg-white rounded-md text-sm" value={presetToSave} onChange={(e) => setPresetToSave(e.target.value)}>
+          <select
+            value={presetToSave}
+            onChange={(e) => setPresetToSave(e.target.value)}
+            className="border-solid border-2 border-gray-300 rounded-md mr-1"
+          >
             <option value="preset1">Preset 1</option>
             <option value="preset2">Preset 2</option>
             <option value="preset3">Preset 3</option>
           </select>
-          <button className="p-1 bg-blue-500 rounded-md text-white text-sm ml-2" onClick={savePreset}>
+          <button className="p-1 bg-green-500 rounded-md text-white text-sm ml-1" onClick={savePreset}>
             Save
+          </button>
+        </div>
+        <div className="flex items-center mb-2">
+          <button className="p-1 bg-blue-500 rounded-md text-white text-sm ml-1" onClick={toggleMute}>
+            {isMuted ? 'Unmute' : 'Mute'} PumpUp Music
           </button>
         </div>
       </div>

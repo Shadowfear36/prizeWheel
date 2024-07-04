@@ -19,6 +19,8 @@ export interface WheelComponentProps {
   fontSize?: string;
   outlineWidth?: number;
   isOnlyOnce?: boolean;
+  onSpin?: () => void; // Add onSpin prop
+  isMuted?: boolean; // Add isMuted prop
 }
 
 const WheelComponent: React.FC<WheelComponentProps> = ({
@@ -30,10 +32,14 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
   contrastColor,
   borderColor,
   size = 300,
+  upDuration = 500, // Set default value
+  downDuration = 600, // Set default value
   fontFamily = 'proxima-nova',
   fontSize = '1em',
   outlineWidth = 10,
-  isOnlyOnce = true
+  isOnlyOnce = true,
+  onSpin, // Receive the onSpin prop
+  isMuted = false // Default to not muted
 }) => {
   const randomString = () => {
     const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz'.split('');
@@ -110,6 +116,15 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
     }
   }, [centerImage]);
 
+  useEffect(() => {
+    if (spinAudioRef.current) {
+      spinAudioRef.current.volume = isMuted ? 1 : 0.2;
+    }
+    if (winAudioRef.current) {
+      winAudioRef.current.volume = isMuted ? 1 : 0.2;
+    }
+  }, [isMuted]);
+
   const wheelInit = () => {
     initCanvas();
     wheelDraw();
@@ -137,6 +152,8 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
 
   const spin = () => {
     setIsStarted(true);
+    if (onSpin) onSpin(); // Call the onSpin prop if provided
+
     if (timerHandle === 0) {
       spinStart = new Date().getTime();
       maxSpeed = Math.PI / segmentsRef.current.length;
@@ -147,7 +164,7 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
       const downTime = (totalDuration * 2) / 3; // 2/3 of the time for spin down
 
       spinAudioRef.current?.play();
-      pumpUpAudioRef.current?.play();
+      if (!isMuted) pumpUpAudioRef.current?.play();
 
       timerHandle = window.setInterval(() => onTimerTick(upTime, downTime), timerDelay);
     }

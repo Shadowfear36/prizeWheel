@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import WheelComponent from "./components/wheelcomponent";
 import HamburgerMenu from "./components/hamburgermenu";
 import Confetti from 'react-confetti';
@@ -21,6 +21,8 @@ const Home: React.FC = () => {
   const [isHamburgerMenuOpen, setIsHamburgerMenuOpen] = useState(false);
   const [wheelSize, setWheelSize] = useState(300);
   const [confettiPieces, setConfettiPieces] = useState(0);
+  const [isMuted, setIsMuted] = useState(false); // Add mute state
+  const pumpUpAudioRef = useRef<HTMLAudioElement>(null); // Add audio ref for pump-up music
 
   const handleAddSegment = (segment: { name: string, color: string }) => {
     setSegments([...segments, segment]);
@@ -51,6 +53,13 @@ const Home: React.FC = () => {
     setPrimaryColor(primary);
     setContrastColor(contrast);
     setBorderColor(border);
+  };
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    if (pumpUpAudioRef.current) {
+      pumpUpAudioRef.current.muted = !isMuted;
+    }
   };
 
   const onFinished = (winner: string) => {
@@ -94,6 +103,9 @@ const Home: React.FC = () => {
           onUpdateSegment={handleUpdateSegment}
           onSetSegments={handleSetSegments}
           segments={segments}
+          pumpUpAudioRef={pumpUpAudioRef}
+          isMuted={isMuted}
+          toggleMute={toggleMute}
         />
       )}
       {confettiPieces > 0 && (
@@ -114,7 +126,9 @@ const Home: React.FC = () => {
         downDuration={600}
         fontFamily="Helvetica"
         isOnlyOnce={false}
+        isMuted={isMuted} // Pass isMuted to WheelComponent
       />
+      <audio ref={pumpUpAudioRef} src="/audio/Score.mp3" />
     </main>
   );
 };
