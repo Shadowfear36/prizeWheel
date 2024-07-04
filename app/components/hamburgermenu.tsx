@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import Dropzone from 'react-dropzone';
+import axios from 'axios';
 
 interface Segment {
   name: string;
@@ -18,27 +19,6 @@ interface HamburgerMenuProps {
 
 const defaultSegmentColors = ['#003087', '#4DA4F2']; // Two shades of blue
 
-const presets = {
-  preset1: [
-    { name: "P1A", color: "#FF5733" },
-    { name: "P1B", color: "#33FF57" },
-    { name: "P1C", color: "#FF5733" },
-    { name: "P1D", color: "#33FF57" }
-  ],
-  preset2: [
-    { name: "P2A", color: "#8E44AD" },
-    { name: "P2B", color: "#2980B9" },
-    { name: "P2C", color: "#8E44AD" },
-    { name: "P2D", color: "#2980B9" }
-  ],
-  preset3: [
-    { name: "P3A", color: "#E74C3C" },
-    { name: "P3B", color: "#F39C12" },
-    { name: "P3C", color: "#E74C3C" },
-    { name: "P3D", color: "#F39C12" }
-  ]
-};
-
 const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   onAddSegment,
   onRemoveSegment,
@@ -55,6 +35,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [allowCustomizations, setAllowCustomizations] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [presetToSave, setPresetToSave] = useState('preset1'); // For saving presets
 
   const handleAddSegment = () => {
     const segmentToAdd = allowCustomizations
@@ -69,8 +50,22 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     setEditingIndex(null);
   };
 
-  const applyPreset = (preset: Segment[]) => {
-    onSetSegments(preset);
+  const applyPreset = async (preset: string) => {
+    try {
+      const response = await axios.get(`/api/presets/${preset}`);
+      onSetSegments(response.data);
+    } catch (error) {
+      console.error('Error loading preset:', error);
+    }
+  };
+
+  const savePreset = async () => {
+    try {
+      await axios.post(`/api/presets/${presetToSave}`, segments);
+      alert('Preset saved');
+    } catch (error) {
+      console.error('Error saving preset:', error);
+    }
   };
 
   const onDrop = useCallback((acceptedFiles: any) => {
@@ -95,7 +90,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     <div className="hamburger-menu w-full max-w-xs mx-auto p-2 bg-white rounded-lg shadow-lg">
       <div className="menu flex flex-col">
         <h2 className="font-bold text-lg mb-2">Wheel Settings</h2>
-        <div className="flex flex-col justify-center items-center mb-2">
+        <div className="flex flex-row justify-center items-center mb-2">
           <input
             type="text"
             placeholder="Segment Name"
@@ -110,10 +105,10 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             onChange={(e) => setNewSegment({ ...newSegment, color: e.target.value })}
             disabled={!allowCustomizations}
           />
+        </div>
           <button className="p-1 bg-green-500 rounded-md text-white text-xs w-full" onClick={handleAddSegment}>
             Add
           </button>
-        </div>
         <div className="flex items-center mb-2">
           <input
             type="checkbox"
@@ -206,14 +201,25 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
         </div>
         <h3 className="font-bold text-md mb-1">Presets</h3>
         <div className="flex flex-row items-center mb-2">
-          <button className="p-1 bg-blue-500 rounded-md text-white text-sm ml-1" onClick={() => applyPreset(presets.preset1)}>
+          <button className="p-1 bg-blue-500 rounded-md text-white text-sm ml-1" onClick={() => applyPreset('preset1')}>
             Preset 1
           </button>
-          <button className="p-1 bg-blue-500 rounded-md text-white text-sm ml-1" onClick={() => applyPreset(presets.preset2)}>
+          <button className="p-1 bg-blue-500 rounded-md text-white text-sm ml-1" onClick={() => applyPreset('preset2')}>
             Preset 2
           </button>
-          <button className="p-1 bg-blue-500 rounded-md text-white text-sm ml-1" onClick={() => applyPreset(presets.preset3)}>
+          <button className="p-1 bg-blue-500 rounded-md text-white text-sm ml-1" onClick={() => applyPreset('preset3')}>
             Preset 3
+          </button>
+        </div>
+        <h3 className="font-bold text-md mb-1">Save Preset</h3>
+        <div className="flex flex-row items-center mb-2">
+          <select className="p-1 bg-white rounded-md text-sm" value={presetToSave} onChange={(e) => setPresetToSave(e.target.value)}>
+            <option value="preset1">Preset 1</option>
+            <option value="preset2">Preset 2</option>
+            <option value="preset3">Preset 3</option>
+          </select>
+          <button className="p-1 bg-blue-500 rounded-md text-white text-sm ml-2" onClick={savePreset}>
+            Save
           </button>
         </div>
       </div>
